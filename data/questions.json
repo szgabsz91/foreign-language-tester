@@ -1,0 +1,21 @@
+[ {
+  "translations" : {
+    "hu" : "Helló!",
+    "en" : "Hello!",
+    "de" : "Hallo!"
+  },
+  "counters" : {
+    "asked" : 1,
+    "failed" : 1
+  }
+}, {
+  "translations" : {
+    "hu" : "Jó napot!",
+    "en" : "Good afternoon!",
+    "de" : "Guten Tag!"
+  },
+  "counters" : {
+    "asked" : 2,
+    "failed" : 1
+  }
+} ]
