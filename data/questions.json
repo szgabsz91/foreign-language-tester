@@ -5,8 +5,8 @@
     "de" : "Hallo!"
   },
   "counters" : {
-    "asked" : 1,
-    "failed" : 1
+    "asked" : 0,
+    "failed" : 0
   }
 }, {
   "translations" : {
@@ -15,7 +15,7 @@
     "de" : "Guten Tag!"
   },
   "counters" : {
-    "asked" : 2,
-    "failed" : 1
+    "asked" : 0,
+    "failed" : 0
   }
 } ]

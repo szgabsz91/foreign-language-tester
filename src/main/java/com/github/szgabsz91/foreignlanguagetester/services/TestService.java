@@ -7,6 +7,7 @@ import com.github.szgabsz91.foreignlanguagetester.models.Test;
 import com.github.szgabsz91.foreignlanguagetester.models.TestItem;
 import com.github.szgabsz91.foreignlanguagetester.models.TestItemCounter;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -19,19 +20,19 @@ import java.util.stream.IntStream;
 @Service
 public class TestService implements InitializingBean {
 
-    private static final Path QUESTIONS_FILE = Paths.get("data/questions.json");
-
     private final List<TestItem> testItems = new ArrayList<>();
 
     private final ObjectMapper objectMapper;
+    private final Path questionsFile;
 
-    public TestService(ObjectMapper objectMapper) {
+    public TestService(ObjectMapper objectMapper, @Value("${foreign-language-tester.questions-file-path}") String questionsFilePath) {
         this.objectMapper = objectMapper;
+        this.questionsFile = Paths.get(questionsFilePath);
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        var testItems = this.objectMapper.readValue(QUESTIONS_FILE.toUri().toURL(), new TypeReference<List<TestItem>>() {})
+        var testItems = this.objectMapper.readValue(this.questionsFile.toFile(), new TypeReference<List<TestItem>>() {})
                 .stream()
                 .map(testItem -> testItem.counters() == null ? new TestItem(testItem.translations(), new TestItemCounter(0, 0)) : testItem)
                 .toList();
@@ -78,7 +79,7 @@ public class TestService implements InitializingBean {
     }
 
     public void saveResults() {
-        try (var outputStream = Files.newOutputStream(QUESTIONS_FILE)) {
+        try (var outputStream = Files.newOutputStream(this.questionsFile)) {
             this.objectMapper.writeValue(outputStream, this.testItems);
         } catch (IOException e) {
             throw new RuntimeException(e);
