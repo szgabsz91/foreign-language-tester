@@ -1,0 +1,21 @@
+[ {
+  "translations" : {
+    "hu" : "apa",
+    "en" : "father",
+    "de" : "der Vater"
+  },
+  "counters" : {
+    "asked" : 0,
+    "failed" : 0
+  }
+}, {
+  "translations" : {
+    "hu" : "anya",
+    "en" : "mother",
+    "de" : "die Mutter"
+  },
+  "counters" : {
+    "asked" : 0,
+    "failed" : 0
+  }
+} ]
