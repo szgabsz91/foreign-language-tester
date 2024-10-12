@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -23,20 +24,31 @@ public class TestService implements InitializingBean {
     private final List<TestItem> testItems = new ArrayList<>();
 
     private final ObjectMapper objectMapper;
-    private final Path questionsFile;
+    private final Path questionsFolder;
 
-    public TestService(ObjectMapper objectMapper, @Value("${foreign-language-tester.questions-file-path}") String questionsFilePath) {
+    public TestService(ObjectMapper objectMapper, @Value("${foreign-language-tester.questions-folder-path}") String questionsFolderPath) {
         this.objectMapper = objectMapper;
-        this.questionsFile = Paths.get(questionsFilePath);
+        this.questionsFolder = Paths.get(questionsFolderPath);
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        var testItems = this.objectMapper.readValue(this.questionsFile.toFile(), new TypeReference<List<TestItem>>() {})
-                .stream()
-                .map(testItem -> testItem.counters() == null ? new TestItem(testItem.translations(), new TestItemCounter(0, 0)) : testItem)
-                .toList();
-        this.testItems.addAll(testItems);
+        try (var questionFiles = Files.walk(this.questionsFolder)) {
+            var testItems = questionFiles
+                    .filter(Files::isRegularFile)
+                    .flatMap(questionsFile -> {
+                        try {
+                            return this.objectMapper.readValue(questionsFile.toFile(), new TypeReference<List<TestItem>>() {})
+                                    .stream()
+                                    .map(testItem -> testItem.counters() == null ? testItem.withCounters(new TestItemCounter(0, 0)) : testItem)
+                                    .map(testItem -> testItem.withFilename(questionsFile.getFileName().toString()));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .toList();
+            this.testItems.addAll(testItems);
+        }
     }
 
     public Test createCompleteTest() {
@@ -79,11 +91,18 @@ public class TestService implements InitializingBean {
     }
 
     public void saveResults() {
-        try (var outputStream = Files.newOutputStream(this.questionsFile)) {
-            this.objectMapper.writeValue(outputStream, this.testItems);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.testItems
+                .stream()
+                .collect(Collectors.groupingBy(TestItem::filename))
+                .forEach((filename, testItems) -> {
+                    var outputFile = this.questionsFolder.resolve(filename);
+
+                    try (var outputStream = Files.newOutputStream(outputFile)) {
+                        this.objectMapper.writeValue(outputStream, testItems);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
 }
