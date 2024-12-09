@@ -20,7 +20,7 @@ jobs:
         with:
           distribution: 'liberica'
           java-package: 'jdk'
-          java-version: '22'
+          java-version: '23'
           cache: 'gradle'
           github-token: '${{ secrets.GITHUB_TOKEN }}'
       - name: Build
